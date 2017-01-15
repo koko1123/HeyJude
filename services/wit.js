@@ -37,9 +37,9 @@ var actions = {
 			FB.newMessage(context._fbid_, message)
 		}
 
-		
+
 		cb()
-		
+
 	},
 
 	merge(sessionId, context, entities, message, cb) {
@@ -51,24 +51,6 @@ var actions = {
 		if (loc) {
 			context.loc = loc
 		}
-
-		// Reset the cutepics story
-		delete context.pics
-
-		// Retrieve the category
-		var category = firstEntityValue(entities, 'category')
-		if (category) {
-			context.cat = category
-		}
-
-		// Retrieve the sentiment
-		var sentiment = firstEntityValue(entities, 'sentiment')
-		if (sentiment) {
-			context.ack = sentiment === 'positive' ? 'Glad your liked it!' : 'Aww, that sucks.'
-		} else {
-			delete context.ack
-		}
-
 		cb(context)
 	},
 
@@ -77,17 +59,18 @@ var actions = {
 	},
 
 	// list of functions Wit.ai can execute
-	['fetch-weather'](sessionId, context, cb) {
-		// Here we can place an API call to a weather service
-		// if (context.loc) {
-		// 	getWeather(context.loc)
-		// 		.then(function (forecast) {
-		// 			context.forecast = forecast || 'sunny'
-		// 		})
-		// 		.catch(function (err) {
-		// 			console.log(err)
-		// 		})
-		// }
+	['getForecast'](sessionId, context, cb) {
+		return new Promise(function(resolve, reject) {
+    	var location = firstEntityValue(entities, "location")
+    	if (location) {
+      	context.forecast = getWeather(location); // we should call a weather API here
+      	delete context.missingLocation;
+    	} else {
+      	context.missingLocation = true;
+      	delete context.forecast;
+    	}
+    	return resolve(context);
+    });
 
 		context.forecast = 'Sunny'
 
@@ -133,4 +116,3 @@ var getWeather = function (location) {
 			})
 	})
 }
-
