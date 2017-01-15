@@ -36,10 +36,7 @@ var actions = {
 		} else {
 			FB.newMessage(context._fbid_, message)
 		}
-
-
 		cb()
-
 	},
 
 	merge(sessionId, context, entities, message, cb) {
@@ -51,19 +48,30 @@ var actions = {
 		if (loc) {
 			context.loc = loc
 		}
-		cb(context)
-	},
 
-	error(sessionId, context, error) {
-		console.log(error.message)
-	},
+		var category = firstEntityValue(entities, 'category')
+			if (category) {
+				context.cat = category
+			}
+
+			// Retrieve the sentiment
+			var sentiment = firstEntityValue(entities, 'sentiment')
+			if (sentiment) {
+				context.ack = sentiment === 'positive' ? 'Glad your liked it!' : 'Aww, that sucks.'
+			} else {
+				delete context.ack
+			}
+		},
+		error(sessionId, context, error) {
+			console.log(error.message)
+		},
 
 	// list of functions Wit.ai can execute
 	['getForecast'](sessionId, context, cb) {
 		return new Promise(function(resolve, reject) {
     	var location = firstEntityValue(entities, "location")
     	if (location) {
-      	context.forecast = getWeather(location); // we should call a weather API here
+      	context.forecast = getWeather(context.loc); // we should call a weather API here
       	delete context.missingLocation;
     	} else {
       	context.missingLocation = true;
@@ -72,14 +80,7 @@ var actions = {
     	return resolve(context);
     });
 
-		context.forecast = 'Sunny'
-
-		cb(context)
-	},
-
-	['fetch-pics'](sessionId, context, cb) {
-		var wantedPics = allPics[context.cat || 'default']
-		context.pics = wantedPics[Math.floor(Math.random() * wantedPics.length)]
+		context.forecast = 'Cold AF'
 
 		cb(context)
 	},
@@ -116,3 +117,28 @@ var getWeather = function (location) {
 			})
 	})
 }
+var allPics = {
+  corgis: [
+    'http://i.imgur.com/uYyICl0.jpeg',
+    'http://i.imgur.com/useIJl6.jpeg',
+    'http://i.imgur.com/LD242xr.jpeg',
+    'http://i.imgur.com/Q7vn2vS.jpeg',
+    'http://i.imgur.com/ZTmF9jm.jpeg',
+    'http://i.imgur.com/jJlWH6x.jpeg',
+		'http://i.imgur.com/ZYUakqg.jpeg',
+		'http://i.imgur.com/RxoU9o9.jpeg',
+  ],
+  racoons: [
+    'http://i.imgur.com/zCC3npm.jpeg',
+    'http://i.imgur.com/OvxavBY.jpeg',
+    'http://i.imgur.com/Z6oAGRu.jpeg',
+		'http://i.imgur.com/uAlg8Hl.jpeg',
+		'http://i.imgur.com/q0O0xYm.jpeg',
+		'http://i.imgur.com/BrhxR5a.jpeg',
+		'http://i.imgur.com/05hlAWU.jpeg',
+		'http://i.imgur.com/HAeMnSq.jpeg',
+  ],
+  default: [
+    'http://blog.uprinting.com/wp-content/uploads/2011/09/Cute-Baby-Pictures-29.jpg',
+  ],
+};
